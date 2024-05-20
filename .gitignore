@@ -13,3 +13,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+# /resources\views\layouts\layout.blade.php
+# /resources\views\admin\login.blade.php
+
+
+

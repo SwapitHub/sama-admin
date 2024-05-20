@@ -16,30 +16,33 @@
 		<meta name="csrf-token" content="{{ csrf_token() }}">
 		<!-- Google font-->
 		<link rel="stylesheet"
-        href=" {{ env('AWS_URL') }}admin-assets/admin/css2?family=Work+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,500;1,600;1,700;1,800;1,900&display=swap">
+        href="{{ asset('public/admin') }}/css2?family=Work+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,500;1,600;1,700;1,800;1,900&display=swap">
+
+
+        <link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/slick-theme.css">
 
 		<link rel="stylesheet"
-        href=" {{ env('AWS_URL') }}admin-assets/admin/css2-1?family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap">
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }} {{ env('AWS_URL') }}admin-assets/admin/css/vendors/chartist.css">
+        href="{{ asset('public/admin') }}/css2-1?family=Nunito:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/chartist.css">
 		<!-- Font Awesome-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/vendors/font-awesome.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/font-awesome.css">
 		<!-- Ico-font-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/vendors/icofont.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/icofont.css">
 
 		<!-- Flag icon-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/vendors/flag-icon.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/flag-icon.css">
 
 		<!-- Dropzone css-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/vendors/dropzone.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/dropzone.css">
 		<!-- Datatables css-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/vendors/datatables.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/datatables.css">
 		<!-- Bootstrap css-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/vendors/bootstrap.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/vendors/bootstrap.css">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/css/dropify.min.css" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/css/iziToast.min.css" />
 
 		<!-- App css-->
-		<link rel="stylesheet" type="text/css" href=" {{ env('AWS_URL') }}admin-assets/admin/css/style.css">
+		<link rel="stylesheet" type="text/css" href="{{ asset('public/admin') }}/css/style.css">
 		<!-- include summernote css/js -->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-lite.min.css"
         integrity="sha512-ZbehZMIlGA8CTIOtdE+M81uj3mrcgyrh6ZFeG33A4FHECakGrOsTPlPQ8ijjLkxgImrdmSVUHn1j+ApjodYZow=="
@@ -675,61 +678,61 @@
 </div>
 
 <!-- latest jquery-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/jquery-3.3.1.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/jquery-3.3.1.min.js"></script>
 <!-- Bootstrap js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/bootstrap.bundle.min.js"></script>
 
 <!-- feather icon js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/icons/feather-icon/feather.min.js"></script>
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/icons/feather-icon/feather-icon.js"></script>
+<script src="{{ asset('public/admin') }}/js/icons/feather-icon/feather.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/icons/feather-icon/feather-icon.js"></script>
 
 <!-- Sidebar jquery-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/sidebar-menu.js"></script>
+<script src="{{ asset('public/admin') }}/js/sidebar-menu.js"></script>
 <!-- Datatable js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/datatables/jquery.dataTables.min.js"></script>
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/datatables/custom-basic.js"></script>
+<script src="{{ asset('public/admin') }}/js/datatables/jquery.dataTables.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/datatables/custom-basic.js"></script>
 
 
 
 <!--dropzone js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/dropzone/dropzone.js"></script>
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/dropzone/dropzone-script.js"></script>
+<script src="{{ asset('public/admin') }}/js/dropzone/dropzone.js"></script>
+<script src="{{ asset('public/admin') }}/js/dropzone/dropzone-script.js"></script>
 
 <!--ckeditor js-->
-{{-- <script src=" {{ env('AWS_URL') }}admin-assets/admin/js/editor/ckeditor/ckeditor.js"></script> --}}
-{{-- <script src=" {{ env('AWS_URL') }}admin-assets/admin/js/editor/ckeditor/ckeditor.custom.js"></script> --}}
+{{-- <script src="{{ asset('public/admin') }}/js/editor/ckeditor/ckeditor.js"></script> --}}
+{{-- <script src="{{ asset('public/admin') }}/js/editor/ckeditor/ckeditor.custom.js"></script> --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Dropify/0.2.2/js/dropify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/izitoast/1.4.0/js/iziToast.min.js"></script>
 
 <!--Customizer admin-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/admin-customizer.js"></script>
+<script src="{{ asset('public/admin') }}/js/admin-customizer.js"></script>
 
 <!-- lazyload js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/lazysizes.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/lazysizes.min.js"></script>
 
 <!--right sidebar js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/chat-menu.js"></script>
+<script src="{{ asset('public/admin') }}/js/chat-menu.js"></script>
 
 
 <!-- Chartist js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/chart/chartist/chartist.js"></script>
+<script src="{{ asset('public/admin') }}/js/chart/chartist/chartist.js"></script>
 
 <!-- Chartjs -->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/chart/chartjs/chart.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/chart/chartjs/chart.min.js"></script>
 <!-- Google chart js-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/chart/google/google-chart-loader.js"></script>
+<script src="{{ asset('public/admin') }}/js/chart/google/google-chart-loader.js"></script>
 <!--Report chart-->
-{{-- <script src=" {{ env('AWS_URL') }}admin-assets/admin/js/admin-reports.js"></script> --}}
+{{-- <script src="{{ asset('public/admin') }}/js/admin-reports.js"></script> --}}
 <script src=" {{ asset('admin') }}/js/admin-reports.js"></script>
 
 <!--script admin-->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/admin-script.js"></script>
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/custom.js"></script>
+<script src="{{ asset('public/admin') }}/js/admin-script.js"></script>
+<script src="{{ asset('public/admin') }}/js/custom.js"></script>
 
 <!-- include summernote css/js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-lite.min.js"></script>
 <!--tagify cdn js--->
-<script src=" {{ env('AWS_URL') }}admin-assets/admin/js/sweetalert.min.js"></script>
+<script src="{{ asset('public/admin') }}/js/sweetalert.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/parsley.js/2.9.2/parsley.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.21.1/jQuery.tagify.min.js"></script>

@@ -32,7 +32,7 @@ class FetchProductPrices extends Command
     public function __construct()
     {
         parent::__construct();
-		$this->discount_amount = ProductPrecentageDiscount::first()['amount'];
+		$this->discount_amount = ProductPrecentageDiscount::first()['amount']??0;
     }
 
     /**
@@ -76,7 +76,7 @@ class FetchProductPrices extends Command
         $metalTypes = ['18kt', 'Platinum'];
         $diamondQualities = ['SI1, G', 'LAB GROWN VS-SI1, E/F/G'];
 
-        
+
 
         if($data['finishLevel'] =='Semi-mount (no center)')
         {
@@ -86,7 +86,7 @@ class FetchProductPrices extends Command
         {
             $data['finishLevel'] = 'Polished Blank (no stones)';
         }
-       
+
         foreach ($metalTypes as $metalType) {
             foreach ($metalColors as $metalColor) {
                 foreach ($diamondQualities as $diamondQuality) {
@@ -151,14 +151,14 @@ class FetchProductPrices extends Command
 
 
      }
-	 
+
 	 public function calculatePriceDiscount($price)
 	 {
 	     if($price != 0 || $price != null)
 		 {
-			 $discount_amount = $price * ($this->discount_amount / 100);	 
-			 return $final_price = $price - $discount_amount; 
+			 $discount_amount = $price * ($this->discount_amount / 100);
+			 return $final_price = $price - $discount_amount;
 		 }
-	
+
 	 }
 }
