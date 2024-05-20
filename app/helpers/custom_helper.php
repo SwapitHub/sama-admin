@@ -126,7 +126,6 @@ if (!function_exists('getDiamondImages')) {
         }
     }
 }
-
 if (!function_exists('getGemStoneImages')) {
     function getGemStoneImages($stock_number)
     {
