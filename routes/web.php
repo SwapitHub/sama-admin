@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\Storage;
 	*/
 
 Route::get('/test', function () {
-	// Artisan::call('make:model BlogModel');
-	// return 'OK';
-	//phpinfo();
 	// $img_url = 's3://s3-sama/decorators.png';
 	Storage::put('test1.txt', 'test again');
 	$contents = Storage::disk('s3')->get('test1.txt');
