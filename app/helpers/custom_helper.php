@@ -115,10 +115,10 @@ if (!function_exists('getDiamondImages')) {
 
                 }
 
-                
-                
 
-                
+
+
+
                 // return $jsn_data->response->body->diamonds[0];
             } catch (Exception $e) {
                 return null;
@@ -126,46 +126,6 @@ if (!function_exists('getDiamondImages')) {
         }
     }
 }
-
-
-// if (!function_exists('getDiamondImages')) {
-//     function getDiamondImages($stock_number)
-//     {
-//         if ($stock_number != null) {
-//             try {
-//                 $api_url = "https://apiservices.vdbapp.com/v2/diamonds?type=Diamond&stock_num=" . $stock_number;
-//                 $curl = curl_init();
-//                 curl_setopt_array($curl, array(
-//                     CURLOPT_URL => $api_url,
-//                     CURLOPT_RETURNTRANSFER => true,
-//                     CURLOPT_ENCODING => '',
-//                     CURLOPT_MAXREDIRS => 10,
-//                     CURLOPT_TIMEOUT => 0,
-//                     CURLOPT_FOLLOWLOCATION => true,
-//                     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//                     CURLOPT_CUSTOMREQUEST => 'GET',
-//                     CURLOPT_HTTPHEADER => array(
-//                         'Authorization: Token token=iltz_Ie1tN0qm-ANqF7X6SRjwyhmMtzZsmqvyWOZ83I, api_key=_eTAh9su9_0cnehpDpqM9xA'
-//                     ),
-//                 ));
-//                 $response = curl_exec($curl);
-//                 curl_close($curl);
-//                 $jsn_data = json_decode($response);
-
-//                 // Check if the response is successful and contains diamonds
-//                 if (isset($jsn_data->response->body->diamonds[0])) {
-//                     return $jsn_data->response->body->diamonds[0];
-//                 } else {
-//                     return null;
-//                 }
-//                 // return $jsn_data->response->body->diamonds[0];
-//             } catch (Exception $e) {
-//                 return null;
-//             }
-//         }
-//     }
-// }
-
 
 if (!function_exists('getGemStoneImages')) {
     function getGemStoneImages($stock_number)
@@ -197,7 +157,7 @@ if (!function_exists('getGemStoneImages')) {
                 } else {
                     return null;
                 }
-                
+
             } catch (Exception $e) {
                 return null;
             }
