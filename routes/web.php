@@ -18,8 +18,6 @@ Route::get('/test', function () {
 	Storage::put('test1.txt', 'test again');
 	$contents = Storage::disk('s3')->get('test1.txt');
 	var_dump($contents);
-
-	// return Storage::disk($disk)->url($uploadedPath);
 });
 Route::get('/', function () {
 	return view('admin.login');
