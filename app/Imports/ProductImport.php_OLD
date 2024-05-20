@@ -1,0 +1,350 @@
+<?php
+
+namespace App\Imports;
+
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use App\Models\Menu;
+use App\Models\Category;
+use App\Models\Subcategory;
+use App\Models\ProductModel;
+use App\Models\MetalColor;
+use App\Models\RingMetal;
+use Illuminate\Support\Str;
+
+class ProductImport implements ToCollection, WithHeadingRow
+{
+    /**
+     * @param Collection $collection
+     */
+    protected $menu;
+
+    public function __construct($menu)
+    {
+        $this->menu = $menu;
+    }
+
+    public function collection(Collection $collection)
+    {
+        $product = new ProductModel;
+        $stat = 'true';
+        foreach ($collection as $row) {
+            $input = $row->toArray();
+            // check if product already exist
+            $check_exist = ProductModel::where('entity_id', $input['entity_id'])->where('sku',$input['sku']);
+            if (!$check_exist->exists()) {
+
+                $data =  $this->getCategoryValue($row['categoryvalue']);
+                $input['menu'] = $data['menu'];
+                $input['category'] = $data['category'];
+                $input['sub_category'] = $data['sub_category'];
+                $input['slug'] = $product->generateUniqueSlug($input['name']);
+                $input['videos'] = $product->sortVideos($input['videos']);
+                $input['images'] = json_encode(explode(',',$input['images']));
+                $input['metalType_id'] = $this->getMetalType($input['metaltype']);
+                $input['metalColor_id'] = $this->getMetalColor($input['metalcolor']);
+    
+                $postData = [
+                    'finishLevel' => $input['finishlevel'],
+                    'metalType' => $input['metaltype'],
+                    'metalColor' => $input['metalcolor'],
+                    'sku' => $input['sku'],
+                    'diamondQuality' => $input['diamondquality'],
+                ];
+                $postData1 = [
+                    'finishLevel' => $input['finishlevel'],
+                    'metalType' => $input['metaltype'],
+                    'metalColor' => $input['metalcolor'],
+                    'sku' => $input['sku'],
+                    'diamondQuality' => $input['diamondquality'],
+                ];
+                $response = $this->getColorsPrice($postData);
+                $colorsPrice =  explode(',',$response);
+                $input['internal_sku'] =  $input['sku'];
+                $input['white_gold_price'] =  $colorsPrice[0];
+                $input['yellow_gold_price'] =  $colorsPrice[1];
+                $input['rose_gold_price'] =  $colorsPrice[2];
+
+                $color_response = $this->get18kColorsPrice($postData);
+                $colorsPrice_18k =  explode(',',$color_response);
+                $input['white_gold_price_18k'] =  $colorsPrice_18k[0];
+                $input['yellow_gold_price_18k'] =  $colorsPrice_18k[1];
+                $input['rose_gold_price_18k'] =  $colorsPrice_18k[2];
+                $input['platinum_price'] =  $this->getPlatinumPrice($postData1);
+
+                
+                // insert product in the database
+                // if(!$product::create($input))
+                // {
+                //    $stat = 'false';
+                // }
+            }
+            else
+            {
+                continue;
+               // update data 
+                // $product_data = ProductModel::where('entity_id',$input['entity_id'])->first();
+                // $postData1 = [
+                //     'finishLevel' => $input['finishlevel'],
+                //     'metalType' => $input['metaltype'],
+                //     'metalColor' => $input['metalcolor'],
+                //     'sku' => $input['sku'],
+                //     'diamondQuality' => $input['diamondquality'],
+                // ];
+                // $obj = ProductModel::find($product_data['id']);
+
+                // $color_response = $this->get18kColorsPrice($postData1);
+                // $colorsPrice_18k =  explode(',',$color_response);
+                // $obj->white_gold_price_18k = $colorsPrice_18k[0];
+                // $obj->yellow_gold_price_18k = $colorsPrice_18k[1];
+                // $obj->rose_gold_price_18k = $colorsPrice_18k[2];
+               
+		        // if(!$obj->save())
+                // {
+                //     $stat = 'false';
+                // }
+
+            }
+        }
+        if($stat =='true')
+        {
+            echo  "true";
+        }
+    }
+
+    public function getCategoryValue($arr)
+    {
+        // $menu = "WEDDING BANDS";
+        $menu = $this->menu;
+        $catval = explode(',', $arr);
+        $values = $catval[0];
+        $data = explode('/', $values);
+
+        $category = trim($data[0]);
+        $subcategory = (isset($data[1]) ? $data[1] : null);
+
+        $menudata = Menu::where('name', $menu)->first();
+        $menu_id = $menudata['id'];
+
+        // check category is exit or not, if not create one
+        $query =  Category::where('menu', $menu_id)->where('name', $category);
+        if ($query->exists()) {
+            $catdata = $query->first();
+            $cat_id = $catdata['id'];
+        } else {
+            // insert into category table where menu = $menu
+            $insertData = new Category;
+            $insertData->menu = $menu_id;
+            $insertData->name = $category;
+            $insertData->slug = $insertData->generateUniqueSlug($category);
+            $insertData->order_number = 0;
+            $insertData->status = 'false';
+            $insertData->save();
+            $cat_id = $insertData->id;
+        }
+
+        if (isset($subcategory)) {
+            // check subcategory exist in table if not then create one 
+            $check_subcat = Subcategory::where('menu_id', $menu_id)->where('category_id', $cat_id)->where('name', $subcategory);
+            if ($check_subcat->exists()) {
+                $subcatdata = $check_subcat->first();
+                $subcat_id = $subcatdata['id'];
+            } else {
+                // insert into subcategory table where menu = $menu && category_id = cat_id
+                $subcatInsert = new Subcategory;
+                $subcatInsert->menu_id = $menu_id;
+                $subcatInsert->category_id = $cat_id;
+                $subcatInsert->name = $subcategory;
+                $subcatInsert->slug = $subcatInsert->generateUniqueSlug($subcategory);
+                $subcatInsert->status = 'false';
+                $subcatInsert->order_number = 0;
+                $subcatInsert->save();
+                $subcat_id = $subcatInsert->id;
+            }
+        }else{
+            $subcat_id = null;
+        }
+
+
+        return ['category' => $cat_id, 'sub_category' => $subcat_id, 'menu' => $menu_id];
+    }
+
+    public function getMetalType($metalType)
+    {
+        $metal =  RingMetal::where('metal', trim($metalType));
+        if ($metal->exists()) {
+            // get the id 
+            $metaldata =  $metal->first();
+            $metal_id = $metaldata['id'];
+        } else {
+            // insert into metal 
+            $metal = new RingMetal;
+            $metal->metal = trim($metalType);
+            $metal->status = 'false';
+            $metal->order_number = 0;
+            $metal->save();
+            $metal_id = $metal->id;
+        }
+
+        return $metal_id;
+    }
+
+    public function getMetalColor($color)
+    {
+        $metalcolor =  MetalColor::where('name', trim($color));
+        if ($metalcolor->exists()) {
+            // get the id 
+            $metalcolordata =  $metalcolor->first();
+            $metalcolor_id = $metalcolordata['id'];
+        } else {
+            // insert into metal 
+            $metalcolor = new MetalColor;
+            $metalcolor->name = trim($color);
+            $metalcolor->status = 'false';
+            $metalcolor->order_number = 0;
+            $metalcolor->save();
+            $metalcolor_id = $metalcolor->id;
+        }
+
+        return $metalcolor_id;
+    }
+
+    public function getColorsPrice($postData)
+    {
+        $metal = strtolower($postData["metalType"]);
+		$mt = explode('kt', $metal);
+		$metalType = $mt['0'] . 'kt';;
+		$quality = $postData['diamondQuality'];
+		$qualityWithPercent = trim(urlencode($quality));
+        $postData["finishLevel"] = $this->fetchMatchedLevel($postData["finishLevel"]);
+
+        $colors = ['White','Yellow','Pink'];
+
+        $colorPrice = [];
+        foreach($colors as $key=>$color)
+        {
+            $url = 'http://www.overnightmountings.com/priceapi/service.php?action=pricecalculation&type=json&level=' . $postData["finishLevel"] . '&metaltype=' . $metalType . '&metalcolor=' . $color . '&stylenumber=' . $postData["sku"] . '&quality='.$qualityWithPercent.'&sizevalue=0&fingersizevalue=Stock';
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HTTPHEADER => array(
+                    'Cookie: PHPSESSID=e239b0b67e96acd2bf27901dff8fd5ca; frontend=5769fc16c0729213eabc540cf9ddfcee'
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $data = json_decode($response);
+
+            array_push($colorPrice,$data->price??0);
+        }
+        return implode(',',$colorPrice);
+
+	
+    }
+
+    public function get18kColorsPrice($postData)
+    {
+		$metalType = '18kt';
+		$quality = $postData['diamondQuality'];
+		$qualityWithPercent = trim(urlencode($quality));
+        $postData["finishLevel"] = $this->fetchMatchedLevel($postData["finishLevel"]);
+
+        $colors = ['White','Yellow','Pink'];
+
+        $colorPrice = [];
+        foreach($colors as $key=>$color)
+        {
+            $url = 'http://www.overnightmountings.com/priceapi/service.php?action=pricecalculation&type=json&level=' . $postData["finishLevel"] . '&metaltype=' . $metalType . '&metalcolor=' . $color . '&stylenumber=' . $postData["sku"] . '&quality='.$qualityWithPercent.'&sizevalue=0&fingersizevalue=Stock';
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HTTPHEADER => array(
+                    'Cookie: PHPSESSID=e239b0b67e96acd2bf27901dff8fd5ca; frontend=5769fc16c0729213eabc540cf9ddfcee'
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $data = json_decode($response);
+
+            array_push($colorPrice,$data->price??0);
+        }
+        return implode(',',$colorPrice);
+
+	
+    }
+
+    // get platinum prize 
+    public function getPlatinumPrice($postData)
+    {
+		$metalType = 'Platinum';
+		$quality = $postData['diamondQuality'];
+		$qualityWithPercent = trim(urlencode($quality));
+		$postData["sku"] = trim(urlencode($postData["sku"]));
+        $postData["finishLevel"] = $this->fetchMatchedLevel($postData["finishLevel"]);
+
+            $color = "White";
+            $url = 'http://www.overnightmountings.com/priceapi/service.php?action=pricecalculation&type=json&level=' . $postData["finishLevel"] . '&metaltype=' . $metalType . '&metalcolor=' . $color . '&stylenumber=' . $postData["sku"] . '&quality='.$qualityWithPercent.'&sizevalue=0&fingersizevalue=Stock';
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HTTPHEADER => array(
+                    'Cookie: PHPSESSID=e239b0b67e96acd2bf27901dff8fd5ca; frontend=5769fc16c0729213eabc540cf9ddfcee'
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
+            $data = json_decode($response);
+            // echo "Price is =".$postData["sku"]." ".($data->price == null)?0:$data->price; echo "<br>";
+            // exit;
+            // return (string)$data->price??0;
+            if (isset($data->price)) {
+                // Property exists, you can safely access it
+                $price = $data->price;
+            } else {
+                // Property does not exist, handle the error or set a default value
+                $price = 0; // or any other default value
+            }
+            return $price;
+    }
+
+    public function fetchMatchedLevel($level)
+    {
+        $allowedValues = array("Complete", "Polished", "Semi-mount");
+        $finishLevel = $level;
+        $extractedValue = '';
+        foreach ($allowedValues as $allowedValue) {
+            // If the allowed value is found in "finishLevel", print it and exit the loop
+            if (stripos($finishLevel, $allowedValue) !== false) {
+                $extractedValue = $allowedValue;
+                break;
+            }
+        }
+        return $extractedValue;
+    }
+
+
+
+}

@@ -1,0 +1,266 @@
+<?php
+	
+	namespace App\Imports;
+	
+	use Illuminate\Support\Collection;
+	use Maatwebsite\Excel\Concerns\ToCollection;
+	use Maatwebsite\Excel\Concerns\ToModel;
+	use Maatwebsite\Excel\Concerns\WithHeadingRow;
+	use App\Models\Menu;
+	use App\Models\Category;
+	use App\Models\Subcategory;
+	use App\Models\ProductModel;
+	use App\Models\ProductImageModel;
+	use App\Models\ProductVideosModel;
+	use App\Models\MetalColor;
+	use App\Models\RingMetal;
+	use Illuminate\Support\Str;
+	use GuzzleHttp\Client;
+	use Illuminate\Support\Facades\Storage;
+	use Illuminate\Support\Facades\File;
+	
+	class ProductImport implements ToCollection, WithHeadingRow
+	{
+		/**
+			* @param Collection $collection
+		*/
+		
+		protected $menu;
+		protected $importedData;
+		protected $importStatus;
+		
+		public function __construct($menu)
+		{
+			$this->menu = $menu;
+			$this->menu_id = Menu::where('name',$menu)->first()['id'];
+		}
+		
+		public function collection(Collection $collection)
+		{
+			$product = new ProductModel;
+			$stat = 'true';
+			foreach ($collection as $row) {
+				$input = $row->toArray();
+				
+				if($input['parent_sku'] == NULL){
+					$input['type'] = 'parent_product';
+					}else{
+					$input['type'] = 'child_product';
+				}
+				if($input['matching_wedding_band'] =='#N/A' || $input['matching_wedding_band'] == NULL){
+					$input['matching_wedding_band'] = NULL;
+					}else{
+					$input['matching_wedding_band'];
+				}
+				
+				if($input['center_stone_options'] =='#N/A' || $input['center_stone_options'] == NULL){
+					$input['center_stone_options'] = NULL;
+					}else{
+					$input['center_stone_options'];
+				}
+				if($input['newdescription'] =='#N/A' || $input['newdescription'] == NULL){
+					$input['description'] = $input['description'];
+					}else{
+					$input['description'] = $input['newdescription'];
+				}
+				if($input['newcategory'] =='#N/A' || $input['newcategory'] == NULL){
+					$input['newcategory'] =='#N/A' ;
+				}
+				else
+				{
+					$cat_id = $this->getSubCategoryId($input['newcategory']);
+					$input['category'] = 7;
+					$input['sub_category'] = $cat_id;
+				}
+				
+				if($input['product_browse_pg_name'] =='#N/A' || $input['product_browse_pg_name'] == NULL){
+					$input['product_browse_pg_name'] = NULL;
+					}else{
+					$input['product_browse_pg_name'];
+				}
+				
+				if($input['product_pg_name'] =='#N/A' || $input['product_pg_name'] == NULL){
+					$input['product_pg_name'] = NULL;
+					}else{
+					$input['name'] = $input['product_pg_name'];
+				}
+				// $input['metalColor_id'] = $this->getMetalColor($input['metalcolor']);
+				$input['meta_title'] = $input['name'];
+				$input['meta_keyword'] = $input['name'];
+				$input['meta_description'] = $input['name'];
+				unset($input['id']);
+				unset($input['carat']);
+				unset($input['is_newest']);
+				unset($input['is_bestseller']);
+				unset($input['product_pg_name']);
+				unset($input['newcategory']);
+				unset($input['newsubcategory']);
+				unset($input['newdescription']);
+				unset($input['videos']);
+				unset($input['images']);
+				unset($input['170']);
+				unset($input['171']);
+				unset($input['172']);
+				unset($input['173']);
+				
+				$input['menu'] = $this->menu_id;
+				#$input['sub_category'] = $data['sub_category'];
+				#$input['videos'] = json_encode($input['videos']);
+				// $input['videos'] = json_encode($input['videos']);
+				// $input['images'] = json_encode(explode(',',$input['images']));
+				$input['status'] = 'true';
+				
+				$matchData = [
+				'entity_id'=>$input['entity_id'],			
+				'sku'=>$input['sku'],			
+				];
+				$insertOrUpdate = ProductModel::updateOrCreate($matchData,$input);
+				if($insertOrUpdate)
+				{
+					$last_id = $insertOrUpdate->id;
+					if(!empty($input['images'])){
+						$IMAGES = $this->saveImages($input['images'],$input['sku'],$last_id);
+					}
+					if(!empty($input['videos'])){
+						$VIDEOS = $this->saveVideos($input['videos'],$input['sku'],$last_id);
+						
+					}
+					
+				}else
+				{
+					$stat = 'false';
+					echo $input['sku'];
+					break;
+				}	
+				
+			}
+			if($stat =='true')
+			{
+				// #return ['is_updated'=>'true'];
+				$this->getImportedData(['is_updated'=>'true']);
+			}
+			else
+			{
+				// #return ['is_updated'=>'false'];
+				$this->getImportedData(['is_updated'=>'false']);
+			}
+			// Update import status
+			$this->importStatus = ['is_updated' => $stat ? 'true' : 'false'];
+			
+			// Store imported data (optional, depending on your requirements)
+			$this->importedData = $collection;
+			
+		}
+		
+		public function getImportedData()
+		{
+			return $this->importedData;
+		}
+		
+		public function getImportStatus()
+		{
+			return $this->importStatus;
+		}
+		
+		public function getMetalColor($color)
+		{
+			$metalcolor =  MetalColor::where('name', trim($color));
+			if ($metalcolor->exists()) {
+				// get the id 
+				$metalcolordata =  $metalcolor->first();
+				$metalcolor_id = $metalcolordata['id'];
+				} else {
+				// insert into metal 
+				$metalcolor = new MetalColor;
+				$metalcolor->name = trim($color);
+				$metalcolor->status = 'false';
+				$metalcolor->order_number = 0;
+				$metalcolor->save();
+				$metalcolor_id = $metalcolor->id;
+			}
+			
+			return $metalcolor_id;
+		}
+		
+		public function getSubCategoryId($subcatname)
+		{
+			$query =  Subcategory::where('menu_id',$this->menu_id)
+			->where('category_id', 7)
+			->where('name', str_replace('-', ' ', $subcatname));
+			if ($query->exists()) {
+				$catdata = $query->first();
+				$cat_id = $catdata['id'];
+				} else {
+				
+				// insert into category table where menu = $menu
+				$insertData = new Subcategory;
+				$insertData->menu_id = $this->menu_id;
+				$insertData->category_id = 7;
+				$insertData->name = $subcatname;
+				$slug = $insertData->generateUniqueSlug($subcatname);
+				$insertData->slug = $slug;
+				$insertData->alias = $slug;
+				$insertData->order_number = 0;
+				$insertData->status = 'false';
+				$insertData->save();
+				$cat_id = $insertData->id;
+			}
+			return $cat_id ;
+			
+		}
+		
+		
+		public function saveImages($images,$skufolder,$product_id)
+		{
+	        $imageUrlArray = json_decode($images, true);
+			foreach($imageUrlArray as $url)
+			{
+				$filename = basename($url);
+				$matchData = [
+				'product_id'=>$product_id,
+				'product_sku'=>$skufolder,
+				'image_path'=>$filename,
+				];
+				$data = [
+				'product_id'=>$product_id,
+				'product_sku'=>$skufolder,
+				'image_path'=>$filename,
+				'status'=>'true',
+				];
+				if(ProductImageModel::updateOrCreate($matchData,$data))
+				{
+					return true;
+				}
+			}
+			
+		}
+		
+		public function saveVideos($videos,$skufolder,$product_id)
+		{
+			$videos = json_decode($videos, true);
+			foreach($videos as $index => $url)
+			{
+				$filename = basename($url);
+				$mathData = [
+				'product_id'=>$product_id,
+				'product_sku'=>$skufolder,			
+				'color'=>$index,			
+				'video_path'=>$filename,			
+				];
+				$data = [
+				'product_id'=>$product_id,
+				'product_sku'=>$skufolder,
+				'color'=>$index,
+				'video_pathx'=>$filename,
+				'status'=>'true',
+				];
+				
+				if(ProductVideosModel::updateOrCreate($mathData,$data)){
+					return true;
+				}
+				
+			}
+		}
+		
+		
+	}
